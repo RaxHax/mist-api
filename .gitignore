@@ -2,3 +2,4 @@ node_modules
 
 # Vistað af examples/curl/reference-data.sh
 flokkar.json
+__pycache__/

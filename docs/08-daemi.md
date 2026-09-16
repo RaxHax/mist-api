@@ -240,7 +240,7 @@ Seinni færslan er viljandi röng: afsláttarverðið er hærra en upphaflega ve
 ```
 
 Svarið er `200` þótt önnur færslan hafi fallið. **Lestu alltaf `summary.failed`
-og farðu í gegnum `results`.** Lagaðu færsluna og sendu hana aftur: gagnvirknin
+og farðu í gegnum `results`.** Lagaðu færsluna og sendu hana aftur: endurtakanleikinn
 sér til þess að `SKU-1043` verði ekki tvítekið.
 
 ## 7. Farðu yfir stöðuna

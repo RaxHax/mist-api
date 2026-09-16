@@ -25,7 +25,7 @@ komnir í loftið.
 - Hraðatakmörkun: sjálfgefið 60 beiðnir á mínútu á hvern lykil, með hausunum
   `X-RateLimit-Limit` og `X-RateLimit-Remaining` og `Retry-After` á `429`.
 - `GET /me` sem skilar fyrirtækinu og lýsigögnum lykilsins.
-- `PUT /offers/{externalId}`: gagnvirk innsending lykluð á vörunúmer
+- `PUT /offers/{externalId}`: endurtakanleg innsending lykluð á vörunúmer
   fyrirtækisins.
 - `POST /offers/batch`: allt að 100 tilboð í einni beiðni, með niðurstöðu fyrir
   hverja færslu.

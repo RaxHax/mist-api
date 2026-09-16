@@ -3,10 +3,10 @@
 Þetta eru venjur sem gera samstillingu ódýra, fyrirsjáanlega og auðvelda að
 laga þegar eitthvað fer úrskeiðis.
 
-## Ytra auðkenni og gagnvirkni
+## Ytra auðkenni og endurtakanleiki
 
 `externalId` er hornsteinninn. Mist lyklar tilboðið á það, svo `PUT` á sama
-auðkenni er gagnvirkt (idempotent): fyrsta kallið stofnar, öll næstu uppfæra.
+auðkenni er endurtakanlegt (idempotent): fyrsta kallið stofnar, öll næstu uppfæra.
 
 Veldu auðkenni sem er:
 
@@ -21,7 +21,7 @@ Gott:   SKU-1042, 5690123456789, vara-8831
 Slæmt:  ullarkapa-30-afslattur-oktober
 ```
 
-Af gagnvirkninni leiðir að þú mátt endurtaka hvaða kall sem er án þess að
+Af endurtakanleikanum leiðir að þú mátt endurtaka hvaða kall sem er án þess að
 óttast tvítekningu. Dettur skriftan út á miðri leið, keyrðu hana bara aftur
 frá byrjun.
 

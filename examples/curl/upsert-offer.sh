@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Stofnar eða uppfærir eitt tilboð.
 #
-# Aðgerðin er gagnvirk: fyrsta kallið stofnar tilboðið (201), næstu kall
+# Aðgerðin er endurtakanleg (idempotent): fyrsta kallið stofnar tilboðið (201), næstu kall
 # uppfæra það (200). Óhætt er að keyra þetta eins oft og þú vilt.
 #
 # Athugaðu að PUT lýsir tilboðinu eins og það á að líta út eftir kallið.

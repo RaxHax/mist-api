@@ -57,7 +57,7 @@ curl -s "https://mist.is/api/v1/categories" \
 ```
 
 **4. Sendu fyrsta tilboðið.** `externalId` í slóðinni er þitt eigið vörunúmer.
-Kallið er gagnvirkt: fyrsta skiptið stofnar, næstu uppfæra.
+Kallið er endurtakanlegt: fyrsta skiptið stofnar, næstu uppfæra.
 
 ```bash
 curl -s -X PUT "https://mist.is/api/v1/offers/SKU-1042" \
@@ -82,7 +82,7 @@ curl -s -X PUT "https://mist.is/api/v1/offers/SKU-1042" \
 
 - **`originalPrice` verður að vera raunverulegt fyrra verð.** Neytendastofa
   hefur eftirlit með því, og Mist skráir verðsögu við hverja breytingu.
-- **`externalId` er þitt eigið stöðuga vörunúmer.** Það gerir `PUT` gagnvirkt,
+- **`externalId` er þitt eigið stöðuga vörunúmer.** Það gerir `PUT` endurtakanlegt,
   svo óhætt er að keyra sömu samstillingu aftur.
 - **`DELETE` afvirkjar, eyðir ekki.** Rétta leiðin þegar vara selst upp.
 - **Sendu í lotum.** Lota telst ein beiðni gagnvart hraðatakmörkuninni.
