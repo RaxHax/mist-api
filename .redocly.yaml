@@ -1,0 +1,11 @@
+# Stillingar fyrir Redocly lint.
+#
+# Reglan "operation-4xx-response" krefst þess að hver aðgerð lýsi að minnsta
+# kosti einu 4xx svari. Endapunkturinn GET /openapi.json er opinn, krefst
+# ekki lykils og skilar engri 4xx villu, svo reglan er slökkt frekar en að
+# skjalfesta villusvar sem samningurinn nefnir ekki.
+extends:
+  - recommended
+
+rules:
+  operation-4xx-response: off

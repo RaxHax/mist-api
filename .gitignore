@@ -1,0 +1,4 @@
+node_modules
+
+# Vistað af examples/curl/reference-data.sh
+flokkar.json

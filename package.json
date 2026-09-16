@@ -1,0 +1,18 @@
+{
+  "name": "mist-api-docs",
+  "version": "1.0.0-draft.0",
+  "private": true,
+  "description": "Skjolun fyrir Mist merchant API v1",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "lint": "npm run lint:md && npm run lint:style && npm run lint:openapi",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"!node_modules\"",
+    "lint:style": "node scripts/check-style.mjs",
+    "lint:openapi": "redocly lint openapi/mist-api.v1.yaml"
+  },
+  "devDependencies": {
+    "@redocly/cli": "1.34.2",
+    "markdownlint-cli2": "0.17.2"
+  }
+}
