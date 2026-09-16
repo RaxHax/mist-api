@@ -1,0 +1,1386 @@
+openapi: 3.1.0
+
+info:
+  title: Mist merchant API
+  version: 1.0.0-draft
+  summary: Viðmót Mist fyrir fyrirtæki sem senda tilboð inn í Torgið.
+  description: |
+    Mist merchant API gerir samþykktu fyrirtæki kleift að senda tilboð sín
+    inn í Mist beint úr eigin kerfi (vefverslun, vöruskrá, útflutningsskriftu).
+
+    ## Staða: v1 forútgáfa
+
+    Þessi lýsing er bindandi samningur um það sem verður gefið út.
+    Endapunktarnir hér eru ekki komnir í loftið. Stjórnborðið og
+    fyrirtækjaaðgangar eru virk í dag, en API endapunktarnir koma næst.
+    Mist gefur út API-lykla til samþykktra fyrirtækja gegnum stjórnborðið og
+    staðfestir nákvæma grunnslóð (base URL) um leið og lykillinn er afhentur.
+
+    ## Auðkenning
+
+    Sendu `Authorization: Bearer mist_live_<32 stafir>` með hverri beiðni.
+    Lykillinn birtist aðeins einu sinni, við stofnun. Sjá skjölun um
+    auðkenningu fyrir heimildir, endurnýjun og afturköllun.
+
+    ## Villur
+
+    Allar villur eru `application/problem+json` með stöðugum `code` reit.
+    Hámarksstærð beiðnihluta (body) er 1 MB.
+
+    ## Upphaflegt verð
+
+    `originalPrice` verður að vera raunverulegt fyrra verð. Þetta er lagaskylda
+    á Íslandi og Neytendastofa hefur eftirlit með henni. Mist skráir verðsögu
+    við hverja breytingu.
+  contact:
+    name: Mist, þjónusta við fyrirtæki
+    email: api@mist.is
+    url: https://mist.is
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://mist.is/api/v1
+    description: |
+      Skjalfest grunnslóð fyrir v1. Nákvæm grunnslóð er staðfest með
+      lyklinum þegar hann er gefinn út.
+
+tags:
+  - name: Aðgangur
+    description: Upplýsingar um lykilinn og fyrirtækið sem hann tilheyrir.
+  - name: Tilboð
+    description: Stofna, uppfæra, sækja og afvirkja tilboð.
+  - name: Tilvísunargögn
+    description: Vörumerki, verslanir og flokkatré sem tilboð vísa í.
+  - name: Lýsigögn
+    description: Vélræn lýsing á viðmótinu sjálfu.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /me:
+    get:
+      operationId: getMe
+      summary: Sækja upplýsingar um lykilinn og fyrirtækið
+      description: |
+        Skilar fyrirtækinu sem lykillinn tilheyrir ásamt lýsigögnum um lykilinn
+        sjálfan. Gagnlegt til að staðfesta uppsetningu áður en tilboð eru send.
+        Krefst gilds lykils með annaðhvort `offers:read` eða `offers:write`.
+      tags:
+        - Aðgangur
+      responses:
+        '200':
+          description: Upplýsingar um lykil og fyrirtæki.
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+              examples:
+                virkurLykill:
+                  summary: Virkur lykill hjá virku fyrirtæki
+                  value:
+                    organization:
+                      id: 3f1c2a64-8f0e-4b6a-9c31-2d5f8b7a1e90
+                      name: Norðurljós ehf.
+                      status: active
+                      isActive: true
+                    apiKey:
+                      name: Vöruskrá, framleiðsla
+                      hint: a1b2c3d4
+                      scopes:
+                        - offers:read
+                        - offers:write
+                      rateLimitPerMinute: 60
+                      createdAt: '2026-10-01T09:14:00Z'
+                      lastUsedAt: '2026-10-04T11:02:31Z'
+                      expiresAt: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /offers:
+    get:
+      operationId: listOffers
+      summary: Sækja tilboð fyrirtækisins
+      description: |
+        Skilar tilboðum fyrirtækisins í síðum. Notaðu `nextCursor` úr svarinu
+        sem `cursor` í næstu beiðni þar til hann kemur til baka sem `null`.
+        Krefst heimildarinnar `offers:read`.
+      tags:
+        - Tilboð
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          description: Bendill úr `nextCursor` í fyrra svari. Sleppt í fyrstu beiðni.
+          schema:
+            type: string
+          example: eyJvIjoiMjAyNi0xMC0wNCJ9
+        - name: limit
+          in: query
+          required: false
+          description: Fjöldi tilboða á síðu, frá 1 til 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          example: 50
+      responses:
+        '200':
+          description: Síða af tilboðum.
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfferList'
+              examples:
+                fyrstaSida:
+                  summary: Fyrsta síða með einu tilboði
+                  value:
+                    data:
+                      - id: 9c4b1d70-1f2a-4d55-8b0c-6a3e9f2d4c11
+                        externalId: SKU-1042
+                        name: Ullarkápa, dökkgrá
+                        description: Kápa úr íslenskri ull, fóðruð.
+                        offerType: product
+                        originalPrice: 49900
+                        discountedPrice: 34900
+                        url: https://nordurljos.is/vorur/ullarkapa-dokkgra
+                        imageUrls:
+                          - https://cdn.nordurljos.is/vorur/1042/a.jpg
+                        categoryPathKey: clothing/women/outerwear
+                        brand: Norðurljós
+                        storeIds:
+                          - 5a8e3b21-77cc-4f10-9b2d-1e6f0a4c8d33
+                        startAt: null
+                        endAt: '2026-11-30T23:59:59Z'
+                        isDraft: false
+                        isDisabled: false
+                        dealType: null
+                        dealValue: null
+                        source: api
+                        createdAt: '2026-10-01T10:00:00Z'
+                        updatedAt: '2026-10-04T08:30:00Z'
+                    nextCursor: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /offers/batch:
+    post:
+      operationId: upsertOffersBatch
+      summary: Stofna eða uppfæra mörg tilboð í einu
+      description: |
+        Sendir að hámarki 100 tilboð í einni beiðni. Hver færsla er meðhöndluð
+        sjálfstætt og fær sína eigin niðurstöðu, svo ein ógild færsla fellir
+        ekki hinar. Svarið er `200` þótt einstakar færslur mistakist.
+        Krefst heimildarinnar `offers:write`.
+      tags:
+        - Tilboð
+      requestBody:
+        required: true
+        description: Listi tilboða, að hámarki 100.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchRequest'
+            examples:
+              tvoTilbod:
+                summary: Tvö vörutilboð
+                value:
+                  offers:
+                    - externalId: SKU-1042
+                      name: Ullarkápa, dökkgrá
+                      originalPrice: 49900
+                      discountedPrice: 34900
+                      url: https://nordurljos.is/vorur/ullarkapa-dokkgra
+                      categoryPathKey: clothing/women/outerwear
+                      brand: Norðurljós
+                      storeIds: all
+                    - externalId: SKU-1043
+                      name: Ullarhúfa
+                      originalPrice: 6900
+                      discountedPrice: 4900
+                      url: https://nordurljos.is/vorur/ullarhufa
+                      categoryPathKey: clothing/unisex/accessories
+                      brand: Norðurljós
+                      storeIds: all
+      responses:
+        '200':
+          description: Niðurstaða fyrir hverja færslu.
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResult'
+              examples:
+                blondudNidurstada:
+                  summary: Ein færsla stofnuð, ein felld á villu
+                  value:
+                    summary:
+                      total: 2
+                      created: 1
+                      updated: 0
+                      failed: 1
+                    results:
+                      - externalId: SKU-1042
+                        status: created
+                        offerId: 9c4b1d70-1f2a-4d55-8b0c-6a3e9f2d4c11
+                      - externalId: SKU-1043
+                        status: failed
+                        offerId: null
+                        error:
+                          type: https://mist.is/api/v1/errors/validation_failed
+                          title: Beiðnin stóðst ekki staðfestingu
+                          status: 422
+                          code: validation_failed
+                          detail: Afsláttarverð verður að vera lægra en upphaflegt verð.
+                          fields:
+                            - field: discountedPrice
+                              code: must_be_lower_than_original
+                              message: Afsláttarverð verður að vera lægra en upphaflegt verð.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/BatchTooLarge'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /offers/{externalId}:
+    parameters:
+      - $ref: '#/components/parameters/ExternalId'
+    put:
+      operationId: upsertOffer
+      summary: Stofna eða uppfæra tilboð
+      description: |
+        Gagnvirk (idempotent) aðgerð sem er lykluð á `externalId`, þitt eigið
+        stöðuga vörunúmer. Fyrsta beiðnin stofnar tilboðið, næstu beiðnir
+        uppfæra það. Að senda sama efni tvisvar er hættulaust.
+        Krefst heimildarinnar `offers:write`.
+      tags:
+        - Tilboð
+      requestBody:
+        required: true
+        description: Tilboðið eins og það á að líta út eftir aðgerðina.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfferInput'
+            examples:
+              vara:
+                summary: Vörutilboð
+                value:
+                  name: Ullarkápa, dökkgrá
+                  description: Kápa úr íslenskri ull, fóðruð.
+                  offerType: product
+                  originalPrice: 49900
+                  discountedPrice: 34900
+                  url: https://nordurljos.is/vorur/ullarkapa-dokkgra
+                  imageUrls:
+                    - https://cdn.nordurljos.is/vorur/1042/a.jpg
+                  categoryPathKey: clothing/women/outerwear
+                  brand: Norðurljós
+                  storeIds: all
+                  endAt: '2026-11-30T23:59:59Z'
+              veitingar:
+                summary: Veitingatilboð
+                value:
+                  name: Hádegisseðill, tveir réttir
+                  offerType: restaurant
+                  dealType: fixed_price
+                  dealValue: 2.990 kr.
+                  url: https://sjavarbarinn.is/hadegi
+                  categoryPathKey: restaurant/meal/lunch
+                  brand: Sjávarbarinn
+                  storeIds: all
+      responses:
+        '200':
+          description: Tilboðið var uppfært.
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Offer'
+        '201':
+          description: Tilboðið var stofnað.
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Offer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      operationId: disableOffer
+      summary: Afvirkja tilboð
+      description: |
+        Afvirkjar tilboðið svo það hverfur af neytendavefnum. Tilboðinu er ekki
+        eytt: verðsagan og tölfræðin haldast, og PUT á sama `externalId` vekur
+        það aftur. Krefst heimildarinnar `offers:write`.
+      tags:
+        - Tilboð
+      responses:
+        '200':
+          description: Tilboðið er afvirkjað.
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Offer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /brands:
+    get:
+      operationId: listBrands
+      summary: Sækja vörumerki fyrirtækisins
+      description: |
+        Skilar vörumerkjum sem eru skráð á fyrirtækið. Vísað er í vörumerki
+        með nafni í tilboðum, og Mist stofnar það innan fyrirtækisins ef það
+        er ekki til. Krefst annaðhvort `offers:read` eða `offers:write`.
+      tags:
+        - Tilvísunargögn
+      responses:
+        '200':
+          description: Listi vörumerkja.
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandList'
+              examples:
+                voruMerki:
+                  summary: Eitt vörumerki
+                  value:
+                    data:
+                      - id: 71b0c4e9-3d5a-4f88-a2c6-9e17b3d05f42
+                        name: Norðurljós
+                        slug: nordurljos
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /stores:
+    get:
+      operationId: listStores
+      summary: Sækja verslanir fyrirtækisins
+      description: |
+        Skilar verslunum (staðsetningum) fyrirtækisins. Auðkennin hér eru þau
+        sem þú setur í `storeIds` þegar tilboð á aðeins við hluta verslana.
+        Krefst annaðhvort `offers:read` eða `offers:write`.
+      tags:
+        - Tilvísunargögn
+      responses:
+        '200':
+          description: Listi verslana.
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreList'
+              examples:
+                verslanir:
+                  summary: Ein verslun
+                  value:
+                    data:
+                      - id: 5a8e3b21-77cc-4f10-9b2d-1e6f0a4c8d33
+                        name: Norðurljós, Kringlan
+                        address: Kringlan 4, 103 Reykjavík
+                        city: Reykjavík
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /categories:
+    get:
+      operationId: listCategories
+      summary: Sækja flokkatréð
+      description: |
+        Skilar flokkatré Mist. Tilboð verða að vísa í laufflokk (`isLeaf: true`)
+        með `categoryPathKey`. Vöruflokkar og veitingaflokkar eru aðgreindir
+        með `offerType`. Krefst annaðhvort `offers:read` eða `offers:write`.
+      tags:
+        - Tilvísunargögn
+      responses:
+        '200':
+          description: Listi flokka.
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryList'
+              examples:
+                flokkar:
+                  summary: Grein og lauf
+                  value:
+                    data:
+                      - pathKey: clothing/women
+                        name: Dömufatnaður
+                        offerType: product
+                        isLeaf: false
+                        parentPathKey: clothing
+                      - pathKey: clothing/women/outerwear
+                        name: Yfirhafnir
+                        offerType: product
+                        isLeaf: true
+                        parentPathKey: clothing/women
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /openapi.json:
+    get:
+      operationId: getOpenApiDocument
+      summary: Sækja OpenAPI lýsinguna
+      description: |
+        Skilar þessari lýsingu á JSON formi. Endapunkturinn er opinn og krefst
+        ekki API-lykils, svo hægt sé að smíða biðlara áður en lykill er gefinn
+        út.
+      tags:
+        - Lýsigögn
+      security: []
+      responses:
+        '200':
+          description: OpenAPI 3.1 skjalið.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: OpenAPI 3.1 skjal sem lýsir þessu viðmóti.
+                additionalProperties: true
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        API-lykill Mist á forminu `mist_live_<32 stafir>`, sendur sem
+        `Authorization: Bearer mist_live_...`. Lykillinn birtist aðeins einu
+        sinni, þegar hann er stofnaður í stjórnborðinu.
+
+  parameters:
+    ExternalId:
+      name: externalId
+      in: path
+      required: true
+      description: |
+        Þitt eigið stöðuga auðkenni vörunnar eða tilboðsins, til dæmis
+        vörunúmer úr vöruskránni þinni. Mist notar það sem lykil á tilboðið.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+      example: SKU-1042
+
+  headers:
+    XRateLimitLimit:
+      description: Leyfður fjöldi beiðna á mínútu fyrir þennan lykil.
+      schema:
+        type: integer
+      example: 60
+    XRateLimitRemaining:
+      description: Beiðnir sem eftir eru af kvótanum á yfirstandandi mínútu.
+      schema:
+        type: integer
+      example: 57
+    RetryAfter:
+      description: Sekúndur þar til óhætt er að reyna aftur.
+      schema:
+        type: integer
+      example: 23
+
+  responses:
+    Unauthorized:
+      description: |
+        Lykil vantar eða hann er ógildur, afturkallaður eða útrunninn.
+        Villukóðar: `unauthorized`, `api_key_invalid`, `api_key_revoked`,
+        `api_key_expired`.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            ogildurLykill:
+              summary: Ógildur lykill
+              value:
+                type: https://mist.is/api/v1/errors/api_key_invalid
+                title: Lykillinn er ógildur
+                status: 401
+                code: api_key_invalid
+                detail: Enginn virkur API-lykill svarar til þessa leyndarmáls.
+    Forbidden:
+      description: |
+        Lykillinn er gildur en aðgerðin er ekki leyfð.
+        Villukóðar: `scope_missing`, `organization_inactive`.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            heimildVantar:
+              summary: Heimild vantar
+              value:
+                type: https://mist.is/api/v1/errors/scope_missing
+                title: Heimild vantar á lykilinn
+                status: 403
+                code: scope_missing
+                detail: Þessi aðgerð krefst heimildarinnar offers:write.
+    NotFound:
+      description: Tilboð með þessu `externalId` finnst ekki hjá fyrirtækinu.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            finnstEkki:
+              summary: Tilboð finnst ekki
+              value:
+                type: https://mist.is/api/v1/errors/not_found
+                title: Tilboðið finnst ekki
+                status: 404
+                code: not_found
+                detail: Ekkert tilboð með externalId SKU-9999 er skráð á fyrirtækið.
+    ValidationFailed:
+      description: Beiðnin er á réttu formi en efnið stenst ekki reglur.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            reitirRangir:
+              summary: Verðreitir standast ekki reglur
+              value:
+                type: https://mist.is/api/v1/errors/validation_failed
+                title: Beiðnin stóðst ekki staðfestingu
+                status: 422
+                code: validation_failed
+                detail: Einn eða fleiri reitir eru ógildir.
+                fields:
+                  - field: discountedPrice
+                    code: must_be_lower_than_original
+                    message: Afsláttarverð verður að vera lægra en upphaflegt verð.
+    PayloadTooLarge:
+      description: Beiðnihlutinn er stærri en 1 MB.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            ofStort:
+              summary: Of stór beiðni
+              value:
+                type: https://mist.is/api/v1/errors/validation_failed
+                title: Beiðnin er of stór
+                status: 413
+                code: validation_failed
+                detail: Hámarksstærð beiðnihluta er 1 MB.
+    BatchTooLarge:
+      description: Fleiri en 100 tilboð voru send í einni lotu.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            lotaOfStor:
+              summary: Of stór lota
+              value:
+                type: https://mist.is/api/v1/errors/batch_too_large
+                title: Lotan er of stór
+                status: 413
+                code: batch_too_large
+                detail: Að hámarki 100 tilboð eru leyfð í hverri lotu, 250 bárust.
+    RateLimited:
+      description: Hraðatakmörkun lykilsins er fullnýtt á þessari mínútu.
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/XRateLimitLimit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/XRateLimitRemaining'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            ofMargarBeidnir:
+              summary: Of margar beiðnir
+              value:
+                type: https://mist.is/api/v1/errors/rate_limited
+                title: Of margar beiðnir
+                status: 429
+                code: rate_limited
+                detail: Reyndu aftur eftir 23 sekúndur.
+    InternalError:
+      description: Óvænt villa hjá Mist. Óhætt er að reyna aftur síðar.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            innriVilla:
+              summary: Innri villa
+              value:
+                type: https://mist.is/api/v1/errors/internal_error
+                title: Óvænt villa
+                status: 500
+                code: internal_error
+                detail: Beiðnin komst ekki í gegn. Reyndu aftur síðar.
+
+  schemas:
+    Problem:
+      type: object
+      title: Problem
+      description: |
+        Villusvar samkvæmt RFC 9457 (`application/problem+json`). Reiturinn
+        `code` er stöðugur og er það sem biðlarar eiga að greina á.
+      required:
+        - type
+        - title
+        - status
+        - code
+      properties:
+        type:
+          type: string
+          format: uri
+          description: Slóð sem auðkennir villutegundina.
+          example: https://mist.is/api/v1/errors/validation_failed
+        title:
+          type: string
+          description: Stutt lýsing á villunni, ætluð fólki.
+          example: Beiðnin stóðst ekki staðfestingu
+        status:
+          type: integer
+          description: HTTP stöðukóði svarsins.
+          example: 422
+        code:
+          type: string
+          description: Stöðugur villukóði sem biðlarar mega treysta á.
+          enum:
+            - unauthorized
+            - api_key_invalid
+            - api_key_revoked
+            - api_key_expired
+            - scope_missing
+            - organization_inactive
+            - validation_failed
+            - not_found
+            - rate_limited
+            - batch_too_large
+            - internal_error
+          example: validation_failed
+        detail:
+          type: string
+          description: Nánari skýring á þessu tiltekna tilviki.
+          example: Einn eða fleiri reitir eru ógildir.
+        fields:
+          type: array
+          description: |
+            Aðeins með `validation_failed`. Einn hlutur fyrir hvern reit sem
+            stóðst ekki staðfestingu.
+          items:
+            $ref: '#/components/schemas/ProblemField'
+
+    ProblemField:
+      type: object
+      title: ProblemField
+      description: Einn reitur sem stóðst ekki staðfestingu.
+      required:
+        - field
+        - code
+        - message
+      properties:
+        field:
+          type: string
+          description: |
+            Heiti reitsins. Fyrir lotur er vísað með punktaslóð, til dæmis
+            `offers.3.discountedPrice`.
+          example: discountedPrice
+        code:
+          type: string
+          description: Stöðugur kóði fyrir þessa tilteknu reglu.
+          example: must_be_lower_than_original
+        message:
+          type: string
+          description: Skýring á reglunni, ætluð fólki.
+          example: Afsláttarverð verður að vera lægra en upphaflegt verð.
+
+    OfferInput:
+      type: object
+      title: OfferInput
+      description: |
+        Tilboð eins og fyrirtækið sendir það inn. Fyrir `offerType: product`
+        eru `originalPrice` og `discountedPrice` skylda og afsláttarverðið
+        verður að vera lægra en upphaflega verðið. Fyrir
+        `offerType: restaurant` er notað `dealType` og `dealValue`.
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Heiti tilboðsins eins og það birtist í Mist.
+          example: Ullarkápa, dökkgrá
+        description:
+          type: [string, 'null']
+          maxLength: 2000
+          description: Nánari lýsing. Valkvætt.
+          example: Kápa úr íslenskri ull, fóðruð.
+        offerType:
+          type: string
+          enum:
+            - product
+            - restaurant
+          default: product
+          description: Tegund tilboðsins.
+          example: product
+        originalPrice:
+          type: [integer, 'null']
+          minimum: 1
+          description: |
+            Upphaflegt verð í heilum krónum. Verður að vera raunverulegt fyrra
+            verð, sbr. kröfur Neytendastofu. Skylda fyrir vörutilboð.
+          example: 49900
+        discountedPrice:
+          type: [integer, 'null']
+          minimum: 0
+          description: |
+            Afsláttarverð í heilum krónum, lægra en `originalPrice`.
+            Skylda fyrir vörutilboð.
+          example: 34900
+        url:
+          type: string
+          format: uri
+          description: |
+            Slóð á vörusíðu fyrirtækisins. Mist vísar kaupendum þangað með
+            UTM merkingum og afgreiðir aldrei sölu sjálft.
+          example: https://nordurljos.is/vorur/ullarkapa-dokkgra
+        imageUrls:
+          type: array
+          maxItems: 6
+          description: |
+            Myndaslóðir yfir https, að hámarki 6. Mist sækir myndirnar og
+            þjónar þeim. Notaðu stöðugar slóðir og að minnsta kosti 800 px
+            á styttri hlið.
+          items:
+            type: string
+            format: uri
+            example: https://cdn.nordurljos.is/vorur/1042/a.jpg
+        categoryPathKey:
+          type: string
+          description: |
+            Slóðarlykill laufflokks úr `GET /categories`, til dæmis
+            `clothing/men/footwear` eða `beauty-care/skincare/serum`.
+          example: clothing/women/outerwear
+        brand:
+          type: string
+          maxLength: 120
+          description: |
+            Heiti vörumerkis. Mist finnur vörumerkið innan fyrirtækisins og
+            stofnar það ef það er ekki til.
+          example: Norðurljós
+        storeIds:
+          description: |
+            Verslanir sem tilboðið á við. Annaðhvort listi auðkenna úr
+            `GET /stores` eða strengurinn `all` fyrir allar verslanir.
+          oneOf:
+            - type: array
+              description: Listi auðkenna verslana.
+              items:
+                type: string
+                format: uuid
+            - type: string
+              description: Strengurinn `all` fyrir allar verslanir fyrirtækisins.
+              enum:
+                - all
+          example: all
+        startAt:
+          type: [string, 'null']
+          format: date-time
+          description: Upphafstími tilboðsins á ISO 8601 formi. Valkvætt.
+          example: '2026-10-01T00:00:00Z'
+        endAt:
+          type: [string, 'null']
+          format: date-time
+          description: Lokatími tilboðsins á ISO 8601 formi. Valkvætt.
+          example: '2026-11-30T23:59:59Z'
+        isDraft:
+          type: boolean
+          default: false
+          description: Ef satt er tilboðið vistað sem drög og birtist ekki neytendum.
+          example: false
+        dealType:
+          type: [string, 'null']
+          enum:
+            - percent_off
+            - fixed_price
+            - custom
+            - null
+          description: "Tegund veitingatilboðs. Aðeins með `offerType: restaurant`."
+          example: fixed_price
+        dealValue:
+          type: [string, 'null']
+          maxLength: 120
+          description: |
+            Gildi veitingatilboðsins, til dæmis `20%` með `percent_off` eða
+            `2.990 kr.` með `fixed_price`. Aðeins með `offerType: restaurant`.
+          example: 2.990 kr.
+
+    Offer:
+      type: object
+      title: Offer
+      description: Tilboð eins og Mist geymir það.
+      required:
+        - id
+        - externalId
+        - name
+        - offerType
+        - isDraft
+        - isDisabled
+        - source
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Auðkenni tilboðsins hjá Mist.
+          example: 9c4b1d70-1f2a-4d55-8b0c-6a3e9f2d4c11
+        externalId:
+          type: string
+          description: Auðkennið þitt á tilboðinu.
+          example: SKU-1042
+        name:
+          type: string
+          description: Heiti tilboðsins.
+          example: Ullarkápa, dökkgrá
+        description:
+          type: [string, 'null']
+          description: Lýsing tilboðsins.
+          example: Kápa úr íslenskri ull, fóðruð.
+        offerType:
+          type: string
+          enum:
+            - product
+            - restaurant
+          description: Tegund tilboðsins.
+          example: product
+        originalPrice:
+          type: [integer, 'null']
+          description: Upphaflegt verð í heilum krónum.
+          example: 49900
+        discountedPrice:
+          type: [integer, 'null']
+          description: Afsláttarverð í heilum krónum.
+          example: 34900
+        url:
+          type: [string, 'null']
+          format: uri
+          description: Slóð á vörusíðu fyrirtækisins.
+          example: https://nordurljos.is/vorur/ullarkapa-dokkgra
+        imageUrls:
+          type: array
+          description: Myndaslóðir tilboðsins.
+          items:
+            type: string
+            format: uri
+            example: https://cdn.nordurljos.is/vorur/1042/a.jpg
+        categoryPathKey:
+          type: [string, 'null']
+          description: Slóðarlykill flokksins.
+          example: clothing/women/outerwear
+        brand:
+          type: [string, 'null']
+          description: Heiti vörumerkisins.
+          example: Norðurljós
+        storeIds:
+          type: array
+          description: Auðkenni verslana sem tilboðið á við.
+          items:
+            type: string
+            format: uuid
+            example: 5a8e3b21-77cc-4f10-9b2d-1e6f0a4c8d33
+        startAt:
+          type: [string, 'null']
+          format: date-time
+          description: Upphafstími tilboðsins.
+          example: '2026-10-01T00:00:00Z'
+        endAt:
+          type: [string, 'null']
+          format: date-time
+          description: Lokatími tilboðsins.
+          example: '2026-11-30T23:59:59Z'
+        isDraft:
+          type: boolean
+          description: Hvort tilboðið er vistað sem drög.
+          example: false
+        isDisabled:
+          type: boolean
+          description: Hvort tilboðið hefur verið afvirkjað.
+          example: false
+        dealType:
+          type: [string, 'null']
+          description: Tegund veitingatilboðs.
+          example: null
+        dealValue:
+          type: [string, 'null']
+          description: Gildi veitingatilboðs.
+          example: null
+        source:
+          type: string
+          enum:
+            - manual
+            - api
+          description: Hvort tilboðið varð til í stjórnborðinu eða gegnum API.
+          example: api
+        createdAt:
+          type: string
+          format: date-time
+          description: Hvenær tilboðið var stofnað.
+          example: '2026-10-01T10:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Hvenær tilboðinu var síðast breytt.
+          example: '2026-10-04T08:30:00Z'
+
+    OfferList:
+      type: object
+      title: OfferList
+      description: Síða af tilboðum ásamt bendli á næstu síðu.
+      required:
+        - data
+        - nextCursor
+      properties:
+        data:
+          type: array
+          description: Tilboðin á þessari síðu.
+          items:
+            $ref: '#/components/schemas/Offer'
+        nextCursor:
+          type: [string, 'null']
+          description: Bendill á næstu síðu. Er `null` þegar engin síða er eftir.
+          example: null
+
+    BatchRequest:
+      type: object
+      title: BatchRequest
+      description: Lota af tilboðum, að hámarki 100 færslur.
+      required:
+        - offers
+      properties:
+        offers:
+          type: array
+          minItems: 1
+          maxItems: 100
+          description: |
+            Tilboðin í lotunni. Hver færsla er `OfferInput` með viðbótarreitnum
+            `externalId`, sem er skylda hér.
+          items:
+            $ref: '#/components/schemas/BatchOfferInput'
+
+    BatchOfferInput:
+      title: BatchOfferInput
+      description: |
+        `OfferInput` með `externalId` sem skyldureit, því lotan sendir mörg
+        tilboð í einni beiðni og slóðin ber ekkert auðkenni.
+      allOf:
+        - $ref: '#/components/schemas/OfferInput'
+        - type: object
+          required:
+            - externalId
+          properties:
+            externalId:
+              type: string
+              minLength: 1
+              maxLength: 128
+              description: Þitt eigið stöðuga auðkenni tilboðsins.
+              example: SKU-1042
+
+    BatchResult:
+      type: object
+      title: BatchResult
+      description: Niðurstaða lotu, með samantekt og einni færslu fyrir hvert tilboð.
+      required:
+        - summary
+        - results
+      properties:
+        summary:
+          type: object
+          description: Samantekt yfir lotuna.
+          required:
+            - total
+            - created
+            - updated
+            - failed
+          properties:
+            total:
+              type: integer
+              description: Fjöldi færslna í lotunni.
+              example: 2
+            created:
+              type: integer
+              description: Fjöldi tilboða sem voru stofnuð.
+              example: 1
+            updated:
+              type: integer
+              description: Fjöldi tilboða sem voru uppfærð.
+              example: 0
+            failed:
+              type: integer
+              description: Fjöldi færslna sem mistókust.
+              example: 1
+        results:
+          type: array
+          description: Niðurstaða hverrar færslu, í sömu röð og þær voru sendar.
+          items:
+            $ref: '#/components/schemas/BatchItemResult'
+
+    BatchItemResult:
+      type: object
+      title: BatchItemResult
+      description: Niðurstaða einnar færslu í lotu.
+      required:
+        - externalId
+        - status
+      properties:
+        externalId:
+          type: string
+          description: Auðkennið sem sent var inn.
+          example: SKU-1042
+        status:
+          type: string
+          enum:
+            - created
+            - updated
+            - failed
+          description: Hvað varð um færsluna.
+          example: created
+        offerId:
+          type: [string, 'null']
+          format: uuid
+          description: Auðkenni tilboðsins hjá Mist. Er `null` þegar færslan mistókst.
+          example: 9c4b1d70-1f2a-4d55-8b0c-6a3e9f2d4c11
+        error:
+          description: "Villan sem felldi færsluna. Aðeins með `status: failed`."
+          oneOf:
+            - $ref: '#/components/schemas/Problem'
+            - type: 'null'
+              description: Engin villa, færslan tókst.
+
+    Brand:
+      type: object
+      title: Brand
+      description: Vörumerki skráð á fyrirtækið.
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Auðkenni vörumerkisins.
+          example: 71b0c4e9-3d5a-4f88-a2c6-9e17b3d05f42
+        name:
+          type: string
+          description: Heiti vörumerkisins, það sem þú sendir í `brand`.
+          example: Norðurljós
+        slug:
+          type: [string, 'null']
+          description: Slóðarhluti vörumerkisins í Mist.
+          example: nordurljos
+
+    BrandList:
+      type: object
+      title: BrandList
+      description: Listi vörumerkja.
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          description: Vörumerkin.
+          items:
+            $ref: '#/components/schemas/Brand'
+
+    Store:
+      type: object
+      title: Store
+      description: Verslun (staðsetning) fyrirtækisins.
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Auðkenni verslunarinnar, notað í `storeIds`.
+          example: 5a8e3b21-77cc-4f10-9b2d-1e6f0a4c8d33
+        name:
+          type: string
+          description: Heiti verslunarinnar.
+          example: Norðurljós, Kringlan
+        address:
+          type: [string, 'null']
+          description: Heimilisfang verslunarinnar.
+          example: Kringlan 4, 103 Reykjavík
+        city:
+          type: [string, 'null']
+          description: Sveitarfélag eða bær.
+          example: Reykjavík
+
+    StoreList:
+      type: object
+      title: StoreList
+      description: Listi verslana.
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          description: Verslanirnar.
+          items:
+            $ref: '#/components/schemas/Store'
+
+    Category:
+      type: object
+      title: Category
+      description: |
+        Hnútur í flokkatré Mist. Tilboð verða að vísa í laufflokk, það er
+        hnút þar sem `isLeaf` er satt.
+      required:
+        - pathKey
+        - name
+        - offerType
+        - isLeaf
+      properties:
+        pathKey:
+          type: string
+          description: |
+            Slóðarlykill flokksins, aðgreindur með skástriki. Þetta er gildið
+            sem fer í `categoryPathKey`.
+          example: clothing/women/outerwear
+        name:
+          type: string
+          description: Heiti flokksins.
+          example: Yfirhafnir
+        offerType:
+          type: string
+          enum:
+            - product
+            - restaurant
+          description: Hvort flokkurinn á við vörur eða veitingar.
+          example: product
+        isLeaf:
+          type: boolean
+          description: Hvort flokkurinn er laufflokkur og því gildur í tilboði.
+          example: true
+        parentPathKey:
+          type: [string, 'null']
+          description: Slóðarlykill yfirflokks, eða `null` fyrir efsta stig.
+          example: clothing/women
+
+    CategoryList:
+      type: object
+      title: CategoryList
+      description: Listi flokka.
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          description: Flokkarnir.
+          items:
+            $ref: '#/components/schemas/Category'
+
+    MeResponse:
+      type: object
+      title: MeResponse
+      description: Upplýsingar um API-lykilinn og fyrirtækið sem hann tilheyrir.
+      required:
+        - organization
+        - apiKey
+      properties:
+        organization:
+          $ref: '#/components/schemas/Organization'
+        apiKey:
+          $ref: '#/components/schemas/ApiKeyInfo'
+
+    Organization:
+      type: object
+      title: Organization
+      description: Fyrirtækið sem lykillinn tilheyrir.
+      required:
+        - id
+        - name
+        - status
+        - isActive
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Auðkenni fyrirtækisins.
+          example: 3f1c2a64-8f0e-4b6a-9c31-2d5f8b7a1e90
+        name:
+          type: string
+          description: Heiti fyrirtækisins.
+          example: Norðurljós ehf.
+        status:
+          type: string
+          enum:
+            - trial
+            - active
+            - suspended
+            - closed
+          description: Staða fyrirtækisins hjá Mist.
+          example: active
+        isActive:
+          type: boolean
+          description: |
+            Hvort fyrirtækið er virkt. Þegar þetta er ósatt hafna allir
+            endapunktar beiðnum með `organization_inactive`.
+          example: true
+
+    ApiKeyInfo:
+      type: object
+      title: ApiKeyInfo
+      description: |
+        Lýsigögn um lykilinn sem var notaður. Leyndarmálið sjálft er hvergi
+        endursýnt, aðeins `hint`.
+      required:
+        - name
+        - hint
+        - scopes
+        - rateLimitPerMinute
+      properties:
+        name:
+          type: string
+          description: Nafnið sem lykillinn fékk í stjórnborðinu.
+          example: Vöruskrá, framleiðsla
+        hint:
+          type: string
+          description: Fyrstu 8 stafirnir á eftir `mist_live_`, til auðkenningar.
+          example: a1b2c3d4
+        scopes:
+          type: array
+          description: Heimildir lykilsins.
+          items:
+            type: string
+            enum:
+              - offers:read
+              - offers:write
+            example: offers:write
+        rateLimitPerMinute:
+          type: integer
+          description: Leyfður fjöldi beiðna á mínútu.
+          example: 60
+        createdAt:
+          type: string
+          format: date-time
+          description: Hvenær lykillinn var stofnaður.
+          example: '2026-10-01T09:14:00Z'
+        lastUsedAt:
+          type: [string, 'null']
+          format: date-time
+          description: Hvenær lykillinn var síðast notaður.
+          example: '2026-10-04T11:02:31Z'
+        expiresAt:
+          type: [string, 'null']
+          format: date-time
+          description: |
+            Hvenær lykillinn rennur út. Er `null` nema lykillinn hafi verið
+            endurnýjaður, en þá fær gamli lykillinn 24 klukkustunda svigrúm.
+          example: null
