@@ -118,6 +118,10 @@ paths:
         Skilar tilboðum fyrirtækisins í síðum. Notaðu `nextCursor` úr svarinu
         sem `cursor` í næstu beiðni þar til hann kemur til baka sem `null`.
         Krefst heimildarinnar `offers:read`.
+
+        Listinn ber aðeins tilboð sem urðu til gegnum þetta viðmót (þau sem
+        bera `externalId`). Tilboð sem er stofnað beint í stjórnborði Mist
+        kemur ekki fram hér.
       tags:
         - Tilboð
       parameters:
@@ -264,7 +268,7 @@ paths:
                           code: validation_failed
                           detail: Afsláttarverð verður að vera lægra en upphaflegt verð.
                           fields:
-                            - field: discountedPrice
+                            - field: offers.1.discountedPrice
                               code: must_be_lower_than_original
                               message: Afsláttarverð verður að vera lægra en upphaflegt verð.
         '401':
@@ -423,7 +427,7 @@ paths:
                     data:
                       - id: 71b0c4e9-3d5a-4f88-a2c6-9e17b3d05f42
                         name: Norðurljós
-                        slug: nordurljos
+                        slug: null
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -463,7 +467,7 @@ paths:
                       - id: 5a8e3b21-77cc-4f10-9b2d-1e6f0a4c8d33
                         name: Norðurljós, Kringlan
                         address: Kringlan 4, 103 Reykjavík
-                        city: Reykjavík
+                        city: null
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -589,6 +593,13 @@ components:
         Lykil vantar eða hann er ógildur, afturkallaður eða útrunninn.
         Villukóðar: `unauthorized`, `api_key_invalid`, `api_key_revoked`,
         `api_key_expired`.
+
+        `X-RateLimit-Limit` og `X-RateLimit-Remaining` fylgja ekki með á
+        `unauthorized` (hausinn vantar eða er á röngu formi) né á
+        `api_key_invalid` (leyndarmálið svarar ekki til neins lykils): Mist
+        hefur þá ekkert til að reikna kvótann af. `api_key_revoked` og
+        `api_key_expired` bera hausana eins og venjulega, því lykillinn er
+        raunverulega til.
       content:
         application/problem+json:
           schema:
@@ -978,7 +989,10 @@ components:
           example: https://nordurljos.is/vorur/ullarkapa-dokkgra
         imageUrls:
           type: array
-          description: Myndaslóðir tilboðsins.
+          description: |
+            Myndaslóðir tilboðsins sem bárust gegnum þetta viðmót. Mynd sem
+            er hlaðin upp beint í stjórnborði Mist kemur ekki fram hér, svo
+            þessi listi getur verið tómur (`[]`) þótt tilboðið eigi mynd þar.
           items:
             type: string
             format: uri
@@ -1185,8 +1199,10 @@ components:
           example: Norðurljós
         slug:
           type: [string, 'null']
-          description: Slóðarhluti vörumerkisins í Mist.
-          example: nordurljos
+          description: |
+            Slóðarhluti vörumerkisins í Mist. Nullanlegt í samningnum til
+            frambúðar, og skilar í dag alltaf `null`.
+          example: null
 
     BrandList:
       type: object
@@ -1224,8 +1240,10 @@ components:
           example: Kringlan 4, 103 Reykjavík
         city:
           type: [string, 'null']
-          description: Sveitarfélag eða bær.
-          example: Reykjavík
+          description: |
+            Sveitarfélag eða bær. Nullanlegt í samningnum til frambúðar, og
+            skilar í dag alltaf `null`; heimilisfangið er heilt í `address`.
+          example: null
 
     StoreList:
       type: object

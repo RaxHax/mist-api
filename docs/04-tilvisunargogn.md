@@ -24,7 +24,7 @@ curl -s "https://mist.is/api/v1/brands" \
     {
       "id": "71b0c4e9-3d5a-4f88-a2c6-9e17b3d05f42",
       "name": "Norðurljós",
-      "slug": "nordurljos"
+      "slug": null
     }
   ]
 }
@@ -34,7 +34,11 @@ curl -s "https://mist.is/api/v1/brands" \
 | --- | --- | --- |
 | `id` | strengur | Auðkenni vörumerkisins hjá Mist. |
 | `name` | strengur | Heitið. Þetta er gildið sem þú sendir í `brand`. |
-| `slug` | strengur eða `null` | Slóðarhluti vörumerkisins á neytendavefnum. |
+| `slug` | strengur eða `null` | Slóðarhluti vörumerkisins á neytendavefnum. **Er `null` í öllum tilvikum í dag**, sjá athugasemd hér að neðan. |
+
+`slug` er skilgreindur nullanlegur af ásettu ráði og getur fengið gildi í
+framtíðinni án þess að það sé rofnandi breyting, en í dag skilar Mist alltaf
+`null` fyrir hann. Ekki byggja vörpun sem gerir ráð fyrir streng þar.
 
 Í tilboði er vísað í vörumerki **með nafni**, ekki auðkenni:
 
@@ -66,13 +70,13 @@ curl -s "https://mist.is/api/v1/stores" \
       "id": "5a8e3b21-77cc-4f10-9b2d-1e6f0a4c8d33",
       "name": "Norðurljós, Kringlan",
       "address": "Kringlan 4, 103 Reykjavík",
-      "city": "Reykjavík"
+      "city": null
     },
     {
       "id": "c07f9a13-42b8-4de6-8f51-b3a9d6e2074c",
       "name": "Norðurljós, Akureyri",
       "address": "Hafnarstræti 91, 600 Akureyri",
-      "city": "Akureyri"
+      "city": null
     }
   ]
 }
@@ -83,7 +87,13 @@ curl -s "https://mist.is/api/v1/stores" \
 | `id` | strengur | Auðkennið sem fer í `storeIds`. |
 | `name` | strengur | Heiti verslunarinnar. |
 | `address` | strengur eða `null` | Heimilisfang. |
-| `city` | strengur eða `null` | Sveitarfélag eða bær. |
+| `city` | strengur eða `null` | Sveitarfélag eða bær. **Er `null` í öllum tilvikum í dag**, sjá athugasemd hér að neðan. |
+
+`city` er skilgreindur nullanlegur af ásettu ráði og getur fengið gildi í
+framtíðinni án þess að það sé rofnandi breyting, en í dag skilar Mist alltaf
+`null` fyrir hann: heimilisfangið er geymt sem einn frjáls texti í `address`
+og hefur ekki enn verið sundurgreint. Notaðu `address` ef þú þarft
+staðsetninguna í samstillingunni þinni.
 
 Ólíkt vörumerkjum er vísað í verslanir **með auðkenni**, því nöfn verslana eru
 sjaldan einkvæm. Verslanir eru stofnaðar í stjórnborðinu, ekki gegnum þetta

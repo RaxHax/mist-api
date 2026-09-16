@@ -34,6 +34,11 @@ Allar slóðir eru afstæðar við grunnslóðina `https://mist.is/api/v1`.
 einum: valkvæður reitur sem þú sleppir er **hreinsaður**. Sendu alltaf allt
 tilboðið.
 
+Í svari ber `imageUrls` **aðeins þær myndaslóðir sem þú sjálfur sendir gegnum
+þetta viðmót**. Mynd sem einhver hleður upp beint í stjórnborði Mist kemur
+ekki fram hér, jafnvel þótt tilboðið eigi mynd þar í reynd: þá skilar
+`imageUrls` tómum lista (`[]`), ekki slóð á þá mynd.
+
 Tilboð verður alltaf að bera vörumerki (`brand`) og segja til um hvaða
 verslanir það á við (`storeIds`, eða `"all"` fyrir allar). `url` og
 `categoryPathKey` eru ekki skylda, en tilboð án slóðar fær enga tilvísun og
@@ -225,7 +230,7 @@ curl -s -X POST "https://mist.is/api/v1/offers/batch" \
         "detail": "Afsláttarverð verður að vera lægra en upphaflegt verð.",
         "fields": [
           {
-            "field": "discountedPrice",
+            "field": "offers.1.discountedPrice",
             "code": "must_be_lower_than_original",
             "message": "Afsláttarverð verður að vera lægra en upphaflegt verð."
           }
@@ -299,6 +304,11 @@ Að afvirkja tilboð sem er þegar afvirkt breytir engu og skilar sama `200`.
 ## `GET /offers`
 
 Sækir tilboð fyrirtækisins í síðum. Krefst heimildarinnar `offers:read`.
+
+Listinn ber **aðeins tilboð sem urðu til gegnum þetta viðmót**, það er tilboð
+með `externalId`. Tilboð sem er stofnað beint í stjórnborði Mist kemur ekki
+fram hér, því það ber ekkert `externalId` og þetta viðmót hefur enga leið til
+að vísa í það.
 
 | Færibreyta | Tegund | Sjálfgefið | Reglur |
 | --- | --- | --- | --- |

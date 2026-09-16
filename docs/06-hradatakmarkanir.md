@@ -16,6 +16,10 @@ Nokkur atriði sem skipta máli:
 - Glugginn er ein mínúta. Í upphafi hverrar mínútu byrjar talningin upp á nýtt.
 - Lota telst **ein beiðni**, hversu mörg tilboð sem hún ber. Þetta er
   meginástæðan fyrir því að nota `POST /offers/batch` þegar þú sendir margt.
+- **Beiðni sem mistekst telur samt í kvótann.** Fáir þú `422 validation_failed`,
+  `404 not_found`, `403 scope_missing` eða aðra `4xx` eða `5xx` villu (nema
+  `429`), er hún samt talin með. Aðeins `429` sjálft er undanskilið: það væri
+  að refsa þér tvisvar fyrir sömu of-notkunina.
 
 Þarf kerfið þitt meira en 60 beiðnir á mínútu að staðaldri, hafðu samband við
 Mist áður en þú byggir kringum það. Lestu núverandi mörk þín úr
@@ -23,7 +27,10 @@ Mist áður en þú byggir kringum það. Lestu núverandi mörk þín úr
 
 ## Hausar
 
-Hvert svar ber stöðuna á kvótanum.
+Svarið ber stöðuna á kvótanum um leið og lykillinn hefur náð auðkenningu, það
+er, um leið og `Authorization` hausinn er á gildu formi (`Bearer mist_live_`
+og 32 stafir) og leyndarmálið svarar til lykils sem er til í Mist. Það gildir
+um öll svör: `200`, hvaða `4xx` sem er (líka `429`) og `500`.
 
 | Haus | Hvað hann segir |
 | --- | --- |
@@ -35,6 +42,19 @@ HTTP/1.1 200 OK
 X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 57
 ```
+
+Tvö tilvik bera enga hausa, af því beiðnin komst aldrei nógu langt til að
+Mist viti hvaða lykil er verið að tala um:
+
+- `401 unauthorized`: `Authorization` hausinn vantar eða er á röngu formi.
+- `401 api_key_invalid`: leyndarmálið er á réttu formi en svarar ekki til
+  neins lykils hjá Mist. Að skila `0` hér myndi ljóstra því upp að lykillinn
+  sé raunverulega til, svo Mist þegir alveg í staðinn.
+
+Athugaðu að `api_key_revoked` og `api_key_expired` eru ekki í þessum hópi:
+lykillinn er þar til, aðeins ógildur núna, svo hausarnir fylgja með eins og
+venjulega. `GET /openapi.json` krefst ekki lykils og ber því aldrei þessa
+hausa heldur.
 
 Lestu `X-RateLimit-Remaining` úr hverju svari. Nálgist hann núll skaltu hægja á
 þér af sjálfsdáðum í stað þess að keyra á vegginn.
@@ -62,8 +82,10 @@ X-RateLimit-Remaining: 0
 ```
 
 `Retry-After` er fjöldi sekúndna þar til glugginn opnast aftur. **Bíddu eins
-lengi og hausinn segir.** Að reyna aftur fyrr skilar öðru `429` og kostar þig
-kvóta í næsta glugga.
+lengi og hausinn segir.** Að reyna aftur fyrr skilar aðeins öðru `429`: sjálft
+`429` svarið er undanskilið talningunni, hvorki í þessum glugga né þeim næsta,
+svo endurtekin tilraun kostar þig engan kvóta. Hún er samt til einskis og
+hlaðir álagi á netið þitt og á Mist að óþörfu, svo bíddu eftir hausnum.
 
 Beiðnin sem fékk `429` komst ekki í gegn: ekkert var stofnað og engu breytt.
 Óhætt er að senda hana óbreytta aftur.

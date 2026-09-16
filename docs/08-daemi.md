@@ -76,13 +76,13 @@ curl -s "https://mist.is/api/v1/stores" \
       "id": "5a8e3b21-77cc-4f10-9b2d-1e6f0a4c8d33",
       "name": "Norðurljós, Kringlan",
       "address": "Kringlan 4, 103 Reykjavík",
-      "city": "Reykjavík"
+      "city": null
     },
     {
       "id": "c07f9a13-42b8-4de6-8f51-b3a9d6e2074c",
       "name": "Norðurljós, Akureyri",
       "address": "Hafnarstræti 91, 600 Akureyri",
-      "city": "Akureyri"
+      "city": null
     }
   ]
 }

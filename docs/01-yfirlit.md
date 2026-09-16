@@ -74,7 +74,11 @@ Allar slóðir í þessum skjölum eru afstæðar við grunnslóðina. Þegar sk
 
 ## Form beiðna og svara
 
-- Aðeins JSON. Sendu `Content-Type: application/json` með beiðnum sem bera efni.
+- Efnið er JSON. Sendu `Content-Type: application/json` með beiðnum sem bera
+  efni, sem góða venju, en hausinn sjálfur er ekki skilyrði: þjónninn hafnar
+  aldrei beiðni vegna `Content-Type`. Það sem ræður er hvort beiðnihlutinn
+  þáttast sem gilt JSON. Sé hann það ekki fær hann sama `422 validation_failed`
+  og önnur staðfestingarvilla, aldrei `415`.
 - Kóðun er UTF-8. Íslenskir stafir þurfa enga sérmeðferð.
 - Hámarksstærð beiðnihluta (body) er 1 MB.
 - Tímastimplar eru ISO 8601 með tímabelti, til dæmis `2026-11-30T23:59:59Z`.

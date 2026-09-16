@@ -135,8 +135,12 @@ Talan er staða færslunnar í `offers`, talin frá núlli.
 | `invalid_url` | `url`, `imageUrls` | Slóðin er ekki gild. |
 | `invalid_datetime` | `startAt`, `endAt` | Tímastimpillinn er ekki gildur ISO 8601. |
 | `end_before_start` | `endAt` | Lokatími er á undan upphafstíma. |
-| `too_long` | `name`, `description`, `dealValue` | Lengri en hámarkið leyfir. |
+| `too_long` | `name`, `description`, `dealValue`, `externalId`, `brand` | Lengri en hámarkið leyfir. |
 | `required_for_offer_type` | `dealType`, `dealValue`, verðreitir | Reiturinn er skylda fyrir þessa tegund tilboðs. |
+| `invalid_value` | `offerType`, `dealType`, `imageUrls`, `isDraft` | Gildið er ekki eitt af leyfðu gildunum, eða reiturinn er á röngu formi. |
+| `name_taken` | `brand` | Annað fyrirtæki hjá Mist á nú þegar vörumerki með þessu nafni. Reyndu annað heiti eða hafðu samband við Mist. |
+| `out_of_range` | `limit` | Gildið er utan leyfilegra marka (`GET /offers`: 1 til 100). |
+| `invalid_cursor` | `cursor` | Bendillinn er ógildur eða á röngu formi. Sæktu fyrstu síðu upp á nýtt. |
 
 Listinn getur lengst. Meðhöndlaðu óþekktan reitakóða eins og almenna
 staðfestingarvillu: skráðu `field` og `message` og haltu áfram.
@@ -159,7 +163,7 @@ færslunni kemur inni í `results`, ekki sem villusvar.
     "detail": "Afsláttarverð verður að vera lægra en upphaflegt verð.",
     "fields": [
       {
-        "field": "discountedPrice",
+        "field": "offers.1.discountedPrice",
         "code": "must_be_lower_than_original",
         "message": "Afsláttarverð verður að vera lægra en upphaflegt verð."
       }
@@ -167,6 +171,9 @@ færslunni kemur inni í `results`, ekki sem villusvar.
   }
 }
 ```
+
+Taktu eftir punktaslóðinni í `field`: `offers.1` er staða þessarar færslu í
+`offers`, talin frá núlli.
 
 `error` er sami hlutur og villusvar, svo þú getur notað sama kóðann til að lesa
 hann. **`200` þýðir ekki að allt hafi gengið.** Lestu alltaf `summary.failed`
