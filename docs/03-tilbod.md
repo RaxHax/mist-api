@@ -22,17 +22,22 @@ Allar slóðir eru afstæðar við grunnslóðina `https://mist.is/api/v1`.
 | `url` | strengur | Nei, en eindregið mælt með | Slóð á vörusíðu fyrirtækisins. Mist vísar neytendum þangað með UTM merkingum. |
 | `imageUrls` | listi strengja | Nei | Að hámarki 6 slóðir, allar yfir `https`. |
 | `categoryPathKey` | strengur | Nei, en eindregið mælt með | Slóðarlykill laufflokks, til dæmis `clothing/men/footwear`. |
-| `brand` | strengur | Nei | Heiti vörumerkis. Mist stofnar það innan fyrirtækisins ef það er ekki til. |
-| `storeIds` | listi strengja eða `"all"` | Nei | Auðkenni verslana úr `GET /stores`, eða `"all"` fyrir allar verslanir. |
+| `brand` | strengur | Já | Heiti vörumerkis. Mist stofnar það innan fyrirtækisins ef það er ekki til. |
+| `storeIds` | listi strengja eða `"all"` | Já | Auðkenni verslana úr `GET /stores`, eða `"all"` fyrir allar verslanir. |
 | `startAt` | strengur | Nei | ISO 8601 tímastimpill. Tilboðið birtist ekki fyrr. |
 | `endAt` | strengur | Nei | ISO 8601 tímastimpill. Tilboðið hverfur eftir þennan tíma. |
 | `isDraft` | gildisreitur | Nei | Sjálfgefið `false`. Drög birtast ekki neytendum. |
 | `dealType` | `percent_off`, `fixed_price` eða `custom` | Já fyrir veitingar | Aðeins með `offerType: restaurant`. |
 | `dealValue` | strengur | Já fyrir veitingar | Aðeins með `offerType: restaurant`. Að hámarki 120 stafir. |
 
-Reitir sem þú sleppir eru ekki uppfærðir í fyrsta kalli en eru **hreinsaðir**
-þegar tilboðið er uppfært. `PUT` lýsir tilboðinu eins og það á að líta út eftir
-kallið, ekki breytingunum einum. Sendu alltaf allt tilboðið.
+`PUT` lýsir tilboðinu eins og það á að líta út eftir kallið, ekki breytingunum
+einum: valkvæður reitur sem þú sleppir er **hreinsaður**. Sendu alltaf allt
+tilboðið.
+
+Tilboð verður alltaf að bera vörumerki (`brand`) og segja til um hvaða
+verslanir það á við (`storeIds`, eða `"all"` fyrir allar). `url` og
+`categoryPathKey` eru ekki skylda, en tilboð án slóðar fær enga tilvísun og
+tilboð án flokks finnst illa á neytendavefnum. Sendu þau bæði.
 
 ### Vörur og veitingar
 

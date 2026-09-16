@@ -806,9 +806,14 @@ components:
         Tilboð eins og fyrirtækið sendir það inn. Fyrir `offerType: product`
         eru `originalPrice` og `discountedPrice` skylda og afsláttarverðið
         verður að vera lægra en upphaflega verðið. Fyrir
-        `offerType: restaurant` er notað `dealType` og `dealValue`.
+        `offerType: restaurant` eru `dealType` og `dealValue` skylda.
+
+        Verðreitirnir og tilboðsreitirnir eru því skylda eftir aðstæðum og
+        standa ekki í `required` listanum hér að neðan.
       required:
         - name
+        - brand
+        - storeIds
       properties:
         name:
           type: string
