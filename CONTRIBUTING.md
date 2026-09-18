@@ -120,9 +120,10 @@ Rólegur og nákvæmur. Engar upphrópanir, engar ýkjur, engin sölumennska. Se
 hvað gerist og hvers vegna, og slepptu því að segja hversu einfalt eða öflugt
 það sé.
 
-Þar sem endapunktarnir eru ekki komnir í loftið skal það koma skýrt fram.
-Aldrei skrifa eins og eitthvað sé virkt sem er það ekki, og aldrei nefna dagsetningu
-sem hefur ekki verið ákveðin.
+Endapunktarnir eru komnir í loftið frá og með v1, svo aldrei skrifa eins og
+eitthvað sé óvirkt eða óútgefið sem er í raun þegar í loftinu, og aldrei skrifa
+eins og eitthvað sé virkt sem er það ekki. Aldrei nefna dagsetningu sem hefur
+ekki verið ákveðin.
 
 ### Uppbygging skjala
 

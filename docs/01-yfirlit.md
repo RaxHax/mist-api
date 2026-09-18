@@ -5,19 +5,15 @@ Mist beint úr eigin kerfi: vefverslun, vöruskrá eða skriftu sem keyrir á
 nóttunni. Þú heldur vörugögnunum þínum þar sem þau eiga heima og lætur Mist
 vita þegar eitthvað fer á afslátt.
 
-## Staða: v1 forútgáfa
+## Staða: v1 í loftinu
 
-Þetta skjalasafn lýsir v1 viðmótinu eins og það verður gefið út. Lýsingin er
-bindandi samningur: reitaheiti, villukóðar og hegðun breytast ekki án þess að
-það komi fram í [CHANGELOG.md](../CHANGELOG.md).
+Þetta skjalasafn lýsir v1 viðmótinu eins og það er í loftinu í dag. Lýsingin
+er bindandi samningur: reitaheiti, villukóðar og hegðun breytast ekki án þess
+að það komi fram í [CHANGELOG.md](../CHANGELOG.md).
 
-Það sem er virkt í dag er stjórnborðið og fyrirtækjaaðgangar. API
-endapunktarnir koma næst. Þangað til gildir þetta:
-
-- Engin köll ná í gegn ennþá. Ekki byggja vaktaða samstillingu á þessu viðmóti
-  fyrr en Mist hefur staðfest að það sé komið í loftið.
-- Mist gefur út API-lykla til samþykktra fyrirtækja gegnum stjórnborðið.
-  Lyklar eru ekki sjálfsafgreiðsla.
+- Köllin hér ná í gegn og svara samkvæmt þessari lýsingu.
+- Mist gefur út API-lykla til samþykktra fyrirtækja gegnum stjórnborðið, undir
+  Forritaskil. Lyklar eru ekki sjálfsafgreiðsla.
 - Nákvæm grunnslóð er staðfest með lyklinum þegar hann er afhentur.
 
 Þú getur samt undirbúið þig núna: lestu samninginn, smíðaðu vörpunina úr þínum

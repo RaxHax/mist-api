@@ -3,18 +3,19 @@ openapi: 3.1.0
 info:
   title: Mist merchant API
   version: 1.0.0-draft
-  summary: Viðmót Mist fyrir fyrirtæki sem senda tilboð inn í Torgið.
+  summary: Viðmót Mist fyrir fyrirtæki sem senda tilboð inn í Mist.
   description: |
     Mist merchant API gerir samþykktu fyrirtæki kleift að senda tilboð sín
     inn í Mist beint úr eigin kerfi (vefverslun, vöruskrá, útflutningsskriftu).
 
-    ## Staða: v1 forútgáfa
+    ## Staða: v1 í loftinu
 
-    Þessi lýsing er bindandi samningur um það sem verður gefið út.
-    Endapunktarnir hér eru ekki komnir í loftið. Stjórnborðið og
-    fyrirtækjaaðgangar eru virk í dag, en API endapunktarnir koma næst.
-    Mist gefur út API-lykla til samþykktra fyrirtækja gegnum stjórnborðið og
-    staðfestir nákvæma grunnslóð (base URL) um leið og lykillinn er afhentur.
+    Endapunktarnir hér eru komnir í loftið og svara á
+    `https://mist-inky.vercel.app/api/v1`. Stjórnborðið og fyrirtækjaaðgangar
+    eru virk í dag, og API-lyklar eru búnir til beint í stjórnborðinu undir
+    Forritaskil. Mist gefur út API-lykla til samþykktra fyrirtækja gegnum
+    stjórnborðið og staðfestir nákvæma grunnslóð (base URL) um leið og
+    lykillinn er afhentur.
 
     ## Auðkenning
 

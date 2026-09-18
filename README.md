@@ -1,33 +1,28 @@
 # Mist merchant API
 
-**Staða: v1 forútgáfa.** Ekki komið í loftið.
+**Staða: v1 í loftinu.**
 
 Skjölun fyrir viðmótið sem samþykkt fyrirtæki nota til að senda tilboð sín inn
 í Mist beint úr eigin kerfi.
 
-Mist (Torgið) er íslenskur markaður sem safnar saman aðeins því sem er á
-afslætti: vörum úr verslunum og tilboðum veitingastaða. Neytendur skoða úrvalið
-á einum stað og er vísað á vefsíðu fyrirtækisins þegar þeir smella. Mist
-afgreiðir aldrei sölu, greiðslur né birgðir.
+Mist er íslenskur markaður sem safnar saman aðeins því sem er á afslætti:
+vörum úr verslunum og tilboðum veitingastaða. Neytendur skoða úrvalið á einum
+stað og er vísað á vefsíðu fyrirtækisins þegar þeir smella. Mist afgreiðir
+aldrei sölu, greiðslur né birgðir.
 
-## Hvað forútgáfa þýðir
+## Hvað v1 þýðir
 
-Þetta safn lýsir v1 viðmótinu eins og það verður gefið út. Lýsingin er bindandi
-samningur: reitaheiti, villukóðar og hegðun breytast ekki án þess að það komi
-fram í [CHANGELOG.md](CHANGELOG.md).
+Þetta safn lýsir v1 viðmótinu eins og það er í loftinu í dag. Lýsingin er
+bindandi samningur: reitaheiti, villukóðar og hegðun breytast ekki án þess að
+það komi fram í [CHANGELOG.md](CHANGELOG.md).
 
-Það sem er virkt í dag er stjórnborð Mist og fyrirtækjaaðgangar. API
-endapunktarnir koma næst. Þangað til:
-
-- **Köllin hér svara ekki.** Ekki setja vaktaða samstillingu í rekstur fyrr en
-  Mist hefur staðfest að viðmótið sé komið í loftið.
+- **Köllin hér svara.** Grunnslóðin er `https://mist-inky.vercel.app/api/v1`.
 - **Lyklar eru gefnir út af Mist** til samþykktra fyrirtækja gegnum
-  stjórnborðið. Þeir eru ekki sjálfsafgreiðsla.
-- **Nákvæm grunnslóð er staðfest með lyklinum.** Skjölunin notar
-  `https://mist.is/api/v1`. Geymdu slóðina sem stillingu, ekki fast í kóðanum.
+  stjórnborðið, undir Forritaskil. Þeir eru ekki sjálfsafgreiðsla.
+- **Nákvæm grunnslóð er staðfest með lyklinum.** Geymdu slóðina sem stillingu,
+  ekki fasta í kóðanum.
 
-Þú getur samt undirbúið þig núna: lestu samninginn, byggðu vörpunina úr þínum
-gögnum og prófaðu hana gegn OpenAPI lýsingunni.
+Byggðu vörpunina úr þínum gögnum og prófaðu hana gegn OpenAPI lýsingunni.
 
 ## Fimm mínútna byrjun
 

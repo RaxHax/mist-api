@@ -3,8 +3,8 @@
 Hver beiðni ber einn API-lykil. Lykillinn segir Mist hvaða fyrirtæki á í hlut
 og hvað kerfið þitt má gera.
 
-> **Forútgáfa.** Endapunktarnir eru ekki komnir í loftið. Lyklar eru gefnir út
-> til samþykktra fyrirtækja um leið og viðmótið opnar.
+> **V1 í loftinu.** Lyklar eru gefnir út til samþykktra fyrirtækja gegnum
+> stjórnborðið, undir Forritaskil.
 
 ## Hausinn
 
