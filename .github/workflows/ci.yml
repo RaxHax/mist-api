@@ -1,10 +1,8 @@
 name: CI
 
+# Manual only (Actions tab, Run workflow); lint locally with npm run lint.
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   lint:
