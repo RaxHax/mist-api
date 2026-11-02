@@ -264,6 +264,10 @@ Afvirkjar tilboð. Krefst heimildarinnar `offers:write`.
 tölfræðin haldast, og `PUT` á sama `externalId` vekur það aftur. Það er rétta
 leiðin þegar vara selst upp eða tilboð rennur sitt skeið.
 
+Tilboði sem er eytt í stjórnborði Mist er svarað með `404` og kóðanum
+`not_found`, og það kemur ekki fram í `GET /offers`, þar til næsta `PUT` á sama
+`externalId` vekur það aftur, með verðsögunni og vistunum.
+
 ### Beiðni
 
 ```bash
@@ -297,7 +301,7 @@ Að afvirkja tilboð sem er þegar afvirkt breytir engu og skilar sama `200`.
 | `401` | `unauthorized`, `api_key_invalid`, `api_key_revoked`, `api_key_expired` | Lykillinn gengur ekki upp. |
 | `403` | `scope_missing` | Lykilinn vantar `offers:write`. |
 | `403` | `organization_inactive` | Fyrirtækið er ekki virkt. |
-| `404` | `not_found` | Ekkert tilboð með þessu `externalId` hjá fyrirtækinu. |
+| `404` | `not_found` | Ekkert tilboð með þessu `externalId` hjá fyrirtækinu, eða því var eytt í stjórnborðinu. |
 | `429` | `rate_limited` | Hraðatakmörkunin er fullnýtt. |
 | `500` | `internal_error` | Óvænt villa hjá Mist. |
 
